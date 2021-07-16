@@ -3,7 +3,7 @@ import spinal.sim._
 import spinal.core.sim._
 import spinal.lib._
 
-class Control() extends Component {
+case class Control() extends Component {
     val io = new Bundle{
         val opCode = in Bits(7 bits)
         val Branch = out Bool()

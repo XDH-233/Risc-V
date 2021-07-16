@@ -6,7 +6,7 @@ import spinal.lib._
 
 import scala.collection.immutable._
 
-class instMem(width: Int=32, depth: Int=128) extends Component{
+case class instMem(width: Int=32, depth: Int=128) extends Component{
     require(isPow2(depth) && isPow2(width / 8), "depth is not pow(2)")
     val byteCount = width / 8   // 4
     val io = new Bundle{
@@ -28,7 +28,7 @@ object instMemSim extends App{
     }
 }
 
-class dataMem(width: Int=64, depth: Int=1024) extends Component{
+case class dataMem(width: Int=64, depth: Int=1024) extends Component{
     require(isPow2(depth) && isPow2(width / 8), "Err depth or width")
     val byteCount = width / 8
     val io = new Bundle{

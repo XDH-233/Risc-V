@@ -1,0 +1,10 @@
+
+*.xml
+*.v
+simWorkspace
+*.class
+*.d
+*.vcd
+*.o
+*.dat
+*.sh

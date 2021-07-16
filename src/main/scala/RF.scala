@@ -3,7 +3,7 @@ import spinal.sim._
 import spinal.core.sim._
 import spinal.lib._
 
-class RF(width: Int) extends Component{
+case class RF(width: Int=64) extends Component{
     val io = new Bundle{
         val readReg1, readReg2, writeReg = in UInt(5 bits)
         val writeData = in SInt(width bits)

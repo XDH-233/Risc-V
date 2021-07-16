@@ -12,6 +12,7 @@ object Riscv3264{
     def rs2Range = 24 downto 20
     def rs3Range = 31 downto 27
     def csrRange = 31 downto 20
+    def opCode = 6 downto 0
 
     case class IMM(instruction  : Bits) extends Area{
         // immediates
@@ -28,7 +29,7 @@ object Riscv3264{
         def h_sext = B((23 downto 0) -> h(7))  ## h
         def s_sext = B((19 downto 0) -> s(11)) ## s
         def b_sext = B((18 downto 0) -> b(11)) ## b ## False
-        def j_sext = B((10 downto 0) -> j(19)) ## j ## False    
+        def j_sext = B((10 downto 0) -> j(19)) ## j ## False
     }
     // R type
     def ADD                = M"0000000----------000-----0110011"
@@ -46,7 +47,7 @@ object Riscv3264{
     def BEQ                = M"-------------------------1100011"
 
 }
-class ImmGen() extends Component{
+case class ImmGen() extends Component{
     val io = new Bundle{
         val instruction = in Bits(32 bits)
         val immGenOut = out SInt(64 bits)

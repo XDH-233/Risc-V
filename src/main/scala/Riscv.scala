@@ -12,7 +12,6 @@ object Riscv{
     def rs2Range = 24 downto 20
     def rs3Range = 31 downto 27
     def csrRange = 31 downto 20
-
     case class IMM(instruction  : Bits) extends Area{
         // immediates
         def i = instruction(31 downto 20)
