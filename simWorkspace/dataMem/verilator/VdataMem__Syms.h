@@ -7,7 +7,7 @@
 #ifndef _VDATAMEM__SYMS_H_
 #define _VDATAMEM__SYMS_H_  // guard
 
-#include "verilated.h"
+#include "verilated_heavy.h"
 
 // INCLUDE MODULE CLASSES
 #include "VdataMem.h"

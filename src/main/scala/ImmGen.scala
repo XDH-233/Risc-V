@@ -38,13 +38,13 @@ object Riscv3264{
     def AND                = M"0000000----------111-----0110011"
 
     // I type
-    def LD                 = M"-------------------------0000011"
+    def LD                 = M"-----------------011-----0000011"
 
     // S type
-    def SD                 = M"-------------------------0100011"
+    def SD                 = M"-----------------111-----0100011"
 
     // SB type
-    def BEQ                = M"-------------------------1100011"
+    def BEQ                = M"-----------------000-----1100011"
 
 }
 case class ImmGen() extends Component{
@@ -52,7 +52,7 @@ case class ImmGen() extends Component{
         val instruction = in Bits(32 bits)
         val immGenOut = out SInt(64 bits)
     }
-
+    noIoPrefix()
     switch(io.instruction){
         is(Riscv3264.LD){
             io.immGenOut := Riscv3264.IMM(io.instruction).i.asSInt.resize(64)

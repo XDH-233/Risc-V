@@ -4,7 +4,7 @@ import spinal.core.sim._
 import spinal.lib._
 
 
-class spRiscV(depthOfInst: Int) extends Component{
+class spRiscV(depthOfInst: Int, depthOfData: Int) extends Component{
 
     noIoPrefix()
     //---------------------- component------------------------------------------
@@ -13,7 +13,7 @@ class spRiscV(depthOfInst: Int) extends Component{
     val control = Control()
     val regFile = RF(64)
     val immGen= ImmGen()
-    val dataMemory = dataMem(64, 1024)
+    val dataMemory = dataMem(64, depthOfData)
     val ALU_ = ALU(64)
 
     // --------------------- connect --------------------
@@ -26,6 +26,9 @@ class spRiscV(depthOfInst: Int) extends Component{
     regFile.io.readReg2 := instructionMem.io.instruction(Riscv3264.rs2Range).asUInt
     regFile.io.writeReg := instructionMem.io.instruction(Riscv3264.rdRange).asUInt
     regFile.io.writeData := Mux(sel = control.io.MemtoReg, whenTrue = dataMemory.io.readData.asSInt, whenFalse = ALU_.io.Result)
+    regFile.io.RegWrite := control.io.RegWrite
+    // immGen i
+    immGen.io.instruction := instructionMem.io.instruction
     // ALU in
     ALU_.io.data1 := regFile.io.readData1
     ALU_.io.data2 := Mux(sel = control.io.ALUSrc, whenTrue = immGen.io.immGenOut,whenFalse = regFile.io.readData2)
@@ -35,6 +38,8 @@ class spRiscV(depthOfInst: Int) extends Component{
     // dataMem i
     dataMemory.io.address := ALU_.io.Result.asUInt.resized
     dataMemory.io.writeData := regFile.io.readData2.asBits
+    dataMemory.io.memRead := control.io.MemRead
+    dataMemory.io.memWrite := control.io.MemWrite
 
     // PC i
     PC := Mux(sel = control.io.Branch & ALU_.io.Zero, whenTrue = (immGen.io.immGenOut |<< U"1" + PC).asUInt.resized, whenFalse = PC + 4 )
@@ -44,6 +49,16 @@ class spRiscV(depthOfInst: Int) extends Component{
 object spRiscVRTL extends App{
     SpinalConfig(
         defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC, resetActiveLevel = HIGH)
-    ).generateVerilog(new spRiscV(128))
+    ).generateVerilog(new spRiscV(128, 128))
+}
+
+object spRiscVSim extends App{
+    SimConfig.withWave.withConfig(SpinalConfig(
+        defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC, resetActiveLevel = HIGH),
+        defaultClockDomainFrequency = FixedFrequency(100 MHz)
+    )).compile(new spRiscV(128, 128)).doSim { dut =>
+        dut.clockDomain.forkStimulus(10000)
+        dut.clockDomain.waitSampling(100)
+    }
 }
 

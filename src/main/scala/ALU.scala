@@ -19,7 +19,7 @@ case class ALU(width: Int) extends Component{
     val ALUCtrl = Bits(4 bits)
     val control = new Area{
         ALUCtrl := B"1111" // illegal
-        when(io.ALUop === B"00" || (io.ALUop === B"10" && io.funct7 === 0 && io.funct7 === 0) ){
+        when((io.ALUop === B"00" &&(io.funct3 === B"011" || io.funct3 === B"111")) || (io.ALUop === B"10" && io.funct7 === 0 && io.funct7 === 0) ){
             ALUCtrl := B"0010" //add
         }
         when(io.ALUop === B"01" ||(io.ALUop ===B"10" && io.funct7 === B"0100000" && io.funct3 === B"000")){

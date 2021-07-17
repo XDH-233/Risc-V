@@ -28,10 +28,28 @@ VdataMem::~VdataMem() {
     VL_DO_CLEAR(delete __VlSymsp, __VlSymsp = NULL);
 }
 
+void VdataMem::_initial__TOP__1(VdataMem__Syms* __restrict vlSymsp) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    VdataMem::_initial__TOP__1\n"); );
+    VdataMem* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
+    // Variables
+    WData/*223:0*/ __Vtemp1[7];
+    // Body
+    __Vtemp1[0U] = 0x2e62696eU;
+    __Vtemp1[1U] = 0x5f6d656dU;
+    __Vtemp1[2U] = 0x6576656cU;
+    __Vtemp1[3U] = 0x746f706cU;
+    __Vtemp1[4U] = 0x6d2e765fU;
+    __Vtemp1[5U] = 0x74614d65U;
+    __Vtemp1[6U] = 0x6461U;
+    VL_READMEM_N(false, 16, 128, 0, VL_CVT_PACK_STR_NW(7, __Vtemp1)
+                 , vlTOPp->dataMem__DOT__mem, 0, ~0ULL);
+}
+
 void VdataMem::_eval_initial(VdataMem__Syms* __restrict vlSymsp) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    VdataMem::_eval_initial\n"); );
     VdataMem* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
     // Body
+    vlTOPp->_initial__TOP__1(vlSymsp);
     vlTOPp->__Vclklast__TOP__clk = vlTOPp->clk;
 }
 
@@ -46,7 +64,7 @@ void VdataMem::_eval_settle(VdataMem__Syms* __restrict vlSymsp) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    VdataMem::_eval_settle\n"); );
     VdataMem* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
     // Body
-    vlTOPp->_settle__TOP__2(vlSymsp);
+    vlTOPp->_settle__TOP__3(vlSymsp);
 }
 
 void VdataMem::_ctor_var_reset() {

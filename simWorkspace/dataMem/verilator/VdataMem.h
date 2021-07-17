@@ -8,7 +8,7 @@
 #ifndef _VDATAMEM_H_
 #define _VDATAMEM_H_  // guard
 
-#include "verilated.h"
+#include "verilated_heavy.h"
 
 //==========
 
@@ -87,8 +87,9 @@ VL_MODULE(VdataMem) {
   public:
     static void _eval_initial(VdataMem__Syms* __restrict vlSymsp) VL_ATTR_COLD;
     static void _eval_settle(VdataMem__Syms* __restrict vlSymsp) VL_ATTR_COLD;
-    static void _sequent__TOP__1(VdataMem__Syms* __restrict vlSymsp);
-    static void _settle__TOP__2(VdataMem__Syms* __restrict vlSymsp);
+    static void _initial__TOP__1(VdataMem__Syms* __restrict vlSymsp) VL_ATTR_COLD;
+    static void _sequent__TOP__2(VdataMem__Syms* __restrict vlSymsp);
+    static void _settle__TOP__3(VdataMem__Syms* __restrict vlSymsp);
   private:
     static void traceChgSub0(void* userp, VerilatedVcd* tracep);
     static void traceChgTop0(void* userp, VerilatedVcd* tracep);

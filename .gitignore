@@ -8,3 +8,10 @@ simWorkspace
 *.o
 *.dat
 *.sh
+*.bin
+*.v
+*.cpp
+*.class
+*.a
+*.d
+*.h

@@ -66,8 +66,8 @@ void VdataMem::_eval_initial_loop(VdataMem__Syms* __restrict vlSymsp) {
     } while (VL_UNLIKELY(__Vchange));
 }
 
-VL_INLINE_OPT void VdataMem::_sequent__TOP__1(VdataMem__Syms* __restrict vlSymsp) {
-    VL_DEBUG_IF(VL_DBG_MSGF("+    VdataMem::_sequent__TOP__1\n"); );
+VL_INLINE_OPT void VdataMem::_sequent__TOP__2(VdataMem__Syms* __restrict vlSymsp) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    VdataMem::_sequent__TOP__2\n"); );
     VdataMem* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
     // Variables
     CData/*6:0*/ __Vdlyvdim0__dataMem__DOT__mem__v0;
@@ -88,8 +88,8 @@ VL_INLINE_OPT void VdataMem::_sequent__TOP__1(VdataMem__Syms* __restrict vlSymsp
     }
 }
 
-VL_INLINE_OPT void VdataMem::_settle__TOP__2(VdataMem__Syms* __restrict vlSymsp) {
-    VL_DEBUG_IF(VL_DBG_MSGF("+    VdataMem::_settle__TOP__2\n"); );
+VL_INLINE_OPT void VdataMem::_settle__TOP__3(VdataMem__Syms* __restrict vlSymsp) {
+    VL_DEBUG_IF(VL_DBG_MSGF("+    VdataMem::_settle__TOP__3\n"); );
     VdataMem* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
     // Body
     vlTOPp->readData = ((IData)(vlTOPp->memRead) ? 
@@ -104,9 +104,9 @@ void VdataMem::_eval(VdataMem__Syms* __restrict vlSymsp) {
     VdataMem* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;
     // Body
     if (((IData)(vlTOPp->clk) & (~ (IData)(vlTOPp->__Vclklast__TOP__clk)))) {
-        vlTOPp->_sequent__TOP__1(vlSymsp);
+        vlTOPp->_sequent__TOP__2(vlSymsp);
     }
-    vlTOPp->_settle__TOP__2(vlSymsp);
+    vlTOPp->_settle__TOP__3(vlSymsp);
     // Final
     vlTOPp->__Vclklast__TOP__clk = vlTOPp->clk;
 }
