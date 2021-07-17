@@ -42,7 +42,7 @@ class spRiscV(depthOfInst: Int, depthOfData: Int) extends Component{
     dataMemory.io.memWrite := control.io.MemWrite
 
     // PC i
-    PC := Mux(sel = control.io.Branch & ALU_.io.Zero, whenTrue = (immGen.io.immGenOut |<< U"1" + PC).asUInt.resized, whenFalse = PC + 4 )
+    PC := Mux(sel = control.io.Branch && ALU_.io.Zero, whenTrue = (immGen.io.immGenOut |<< 1).asUInt.resize(log2Up(depthOfInst * 4)) + PC, whenFalse = PC +4)
 
 }
 
