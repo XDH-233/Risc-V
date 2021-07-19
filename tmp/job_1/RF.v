@@ -1,5 +1,5 @@
 // Generator : SpinalHDL v1.4.0    git head : ecb5a80b713566f417ea3ea061f9969e73770a7f
-// Date      : 16/07/2021, 23:06:34
+// Date      : 19/07/2021, 10:52:09
 // Component : RF
 
 
@@ -254,8 +254,8 @@ module RF (
   end
 
   assign _zz_1_ = ({31'd0,(1'b1)} <<< writeReg);
-  assign readData1 = _zz_2_;
-  assign readData2 = _zz_3_;
+  assign readData1 = ((RegWrite && (readReg1 == writeReg)) ? writeData : _zz_2_);
+  assign readData2 = ((RegWrite && (readReg2 == writeReg)) ? writeData : _zz_3_);
   always @ (posedge clk) begin
     if(reset) begin
       regs_0 <= 16'h0;

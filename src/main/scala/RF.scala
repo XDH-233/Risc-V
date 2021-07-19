@@ -17,8 +17,8 @@ case class RF(width: Int=64) extends Component{
         regs.access(io.writeReg) := io.writeData
     }
 
-    io.readData1 := regs.read(io.readReg1)
-    io.readData2 := regs.read(io.readReg2)
+    io.readData1 := Mux(io.RegWrite && io.readReg1 === io.writeReg, whenTrue = io.writeData, whenFalse = regs.read(io.readReg1))
+    io.readData2 := Mux(io.RegWrite && io.readReg2 === io.writeReg, whenTrue = io.writeData, whenFalse = regs.read(io.readReg2))
 }
 
 object RF_RTL extends App{

@@ -15,3 +15,8 @@ simWorkspace
 *.a
 *.d
 *.h
+*.class
+*.class
+.~README.md
+target/scala-2.11/classes/RF$$anonfun$1.class
+target/scala-2.11/classes/RF.class
