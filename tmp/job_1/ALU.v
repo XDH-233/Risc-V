@@ -1,10 +1,10 @@
 // Generator : SpinalHDL v1.4.0    git head : ecb5a80b713566f417ea3ea061f9969e73770a7f
 // Date      : 13/07/2021, 19:57:08
-// Component : ALU
+// Component : singleCycle.ALU
 
 
 
-module ALU (
+module singleCycle.ALU (
   input      [1:0]    ALUop,
   input      [6:0]    funct7,
   input      [2:0]    funct3,

@@ -1,10 +1,10 @@
 // Generator : SpinalHDL v1.4.0    git head : ecb5a80b713566f417ea3ea061f9969e73770a7f
 // Date      : 16/07/2021, 23:31:47
-// Component : dataMem
+// Component : singleCycle.dataMem
 
 
 
-module dataMem (
+module singleCycle.dataMem (
   input      [7:0]    address,
   input      [15:0]   writeData,
   output reg [15:0]   readData,
@@ -148,7 +148,7 @@ module dataMem (
 
   assign _zz_3_ = (address >>> 1);
   initial begin
-    $readmemb("dataMem.v_toplevel_mem.bin",mem);
+    $readmemb("singleCycle.dataMem.v_toplevel_mem.bin",mem);
   end
   assign _zz_2_ = mem[_zz_1_];
   always @ (posedge clk) begin

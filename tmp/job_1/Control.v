@@ -1,10 +1,10 @@
 // Generator : SpinalHDL v1.4.0    git head : ecb5a80b713566f417ea3ea061f9969e73770a7f
 // Date      : 13/07/2021, 15:00:01
-// Component : Control
+// Component : singleCycle.Control
 
 
 
-module Control (
+module singleCycle.Control (
   input      [6:0]    opCode,
   output reg          Branch,
   output reg          MemRead,

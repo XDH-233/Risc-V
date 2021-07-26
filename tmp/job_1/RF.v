@@ -1,10 +1,10 @@
 // Generator : SpinalHDL v1.4.0    git head : ecb5a80b713566f417ea3ea061f9969e73770a7f
 // Date      : 22/07/2021, 21:10:40
-// Component : RF
+// Component : singleCycle.RF
 
 
 
-module RF (
+module singleCycle.RF (
   input      [4:0]    readReg1,
   input      [4:0]    readReg2,
   input      [4:0]    writeReg,

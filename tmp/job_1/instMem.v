@@ -1,10 +1,10 @@
 // Generator : SpinalHDL v1.4.0    git head : ecb5a80b713566f417ea3ea061f9969e73770a7f
 // Date      : 17/07/2021, 08:18:14
-// Component : instMem
+// Component : singleCycle.instMem
 
 
 
-module instMem (
+module singleCycle.instMem (
   input      [8:0]    address,
   output     [31:0]   instruction 
 );
@@ -141,7 +141,7 @@ module instMem (
   reg [31:0] mem [0:127];
 
   initial begin
-    $readmemb("instMem.v_toplevel_mem.bin",mem);
+    $readmemb("singleCycle.instMem.v_toplevel_mem.bin",mem);
   end
   assign _zz_2_ = mem[_zz_1_];
   assign inst_0 = 32'h0;

@@ -1,10 +1,10 @@
 // Generator : SpinalHDL v1.4.0    git head : ecb5a80b713566f417ea3ea061f9969e73770a7f
 // Date      : 13/07/2021, 23:56:24
-// Component : ImmGen
+// Component : singleCycle.ImmGen
 
 
 
-module ImmGen (
+module singleCycle.ImmGen (
   input      [31:0]   io_instruction,
   output reg [63:0]   io_immGenOut 
 );

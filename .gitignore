@@ -20,3 +20,7 @@ simWorkspace
 .~README.md
 target/scala-2.11/classes/RF$$anonfun$1.class
 target/scala-2.11/classes/RF.class
+*.vcd
+*.v
+*.v
+*.v
