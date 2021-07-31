@@ -9,19 +9,40 @@ import singleCycle.RF
 import singleCycle.instMem
 
 
-case class globalConfig(operandWidth: Int=64, instNum: Int=128, dataNum: Int= 128)
+object globalConfig{
+    val operandWidth = 64
+    val instNum =128
+    val dataNum =  128
+}
 case class top() extends Component{
-    val config = globalConfig()
+
 
     // IF
-    val PC = Reg(UInt(log2Up(config.instNum) bits)) init(0)     //TODO    PC := Mux(sel = ? , whenTrue = IF2ID.PC + imm, whenFalse = PC + 4)   // Branch prediction design
-    val instructionMem = instMem(width = config.operandWidth, depth = config.instNum)
+    val PC = Reg(UInt(log2Up(globalConfig.instNum) bits)) init(0)     //TODO    PC := Mux(sel = ? , whenTrue = IF2ID.PC + imm, whenFalse = PC + 4)   // Branch prediction design
+    val instructionMem = instMem(width = globalConfig.operandWidth, depth = globalConfig.instNum)
 
-    // IF2ID
-    val IF2ID = if2id(pcWidth=log2Up(config.instNum), instWidth=config.operandWidth)
+    // IF/ID
+   val IF2ID = new Stage(stages.if2id).setDefinitionName("IF2ID")
 
     // ID
-    val registerFile = RF(config.operandWidth)
+    val registerFile = RF(globalConfig.operandWidth)
+
+    // ID/EX
+    val ID2EX = new Stage(stages.id2ex).setDefinitionName("ID2EX")
+
+
+    // EX
+
+    // EX/MEM
+
+    val EX2MEM = new Stage(stages.ex2mem)
+
+    // MEM
+
+    // MEM/WB
+    val MEM2WB = new Stage(stages.mem2wb)
+    // WB
+
 
 
 
