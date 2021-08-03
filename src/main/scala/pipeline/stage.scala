@@ -74,7 +74,7 @@ class Stage[T <: Bundle](gen: => T) extends Component{
 object stages{
     val if2id = new Bundle{
         val PC = out UInt(log2Up(globalConfig.instNum) bits)
-        val inst = out Bits(globalConfig.operandWidth)
+        val inst = out Bits(globalConfig.operandWidth bits)
         val flush = out Bool()
     }
 

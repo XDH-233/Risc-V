@@ -14,7 +14,7 @@ case class immGen(inWidth: Int=32, outWidth:Int=64) extends Component{
     noIoPrefix()
     io.immGenOut := 0
     // I type
-    when(Riscv.isITyoe(io.inst(Riscv.opcode))){
+    when(Riscv.isIType(io.inst(Riscv.opcode))){
         io.immGenOut  := Riscv.IMM(io.inst).i_sext
     }
     // S type
@@ -35,3 +35,7 @@ case class immGen(inWidth: Int=32, outWidth:Int=64) extends Component{
     }
 }
 
+
+object immGenRTL extends App{
+    SpinalVerilog(new immGen())
+}
