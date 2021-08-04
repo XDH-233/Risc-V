@@ -314,9 +314,9 @@ case class forward() extends Component{
             io.forwardC := False
         }
     }.setName("")
-    //TODO forward for branch
-    val BranchSup = new Area{
-        
+
+    val BranchSupEX = new Area{
+
     }
 }
 
@@ -326,11 +326,25 @@ case class hazardDet() extends Component{
         val if2idRs1 = in Bits(5 bits)
         val id2exRd = in Bits(5 bits)
         val if2idRs2 = in Bits(5 bits)
+
+        val id2exRegWrite = in Bool()
+        val branch = in Bool()
         val stall = out Bool()
     }
     noIoPrefix()
     when(io.id2exMemRead &&
         (io.id2exRd === io.if2idRs1 || io.id2exRd === io.if2idRs2) 
+    ){
+        io.stall := True
+    }otherwise{
+        io.stall := False
+    }
+
+
+    // stall for branch in EX
+    when(io.id2exRegWrite &&
+        io.id2exRd =/= 0 &&
+        ((io.id2exRd === io.if2idRs1 ||io.id2exRd === io.if2idRs2) && io.branch)
     ){
         io.stall := True
     }otherwise{

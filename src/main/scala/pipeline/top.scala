@@ -19,6 +19,15 @@ case class top() extends Component{
 
     // IF
     val PC = Reg(UInt(log2Up(globalConfig.instNum) bits)) init(0)     //TODO    PC := Mux(sel = ? , whenTrue = IF2ID.PC + imm, whenFalse = PC + 4)   // Branch prediction design
+//    when(stall){
+//        PC := PC
+//    }otherwise{
+//        when(branch){
+//            PC := PC + imm
+//        }otherwise{
+//            PC := PC + 4
+//        }
+//    }
     val instructionMem = instMem(width = globalConfig.operandWidth, depth = globalConfig.instNum)
 
     // IF/ID
