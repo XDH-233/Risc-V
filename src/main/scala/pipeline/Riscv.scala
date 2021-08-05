@@ -140,8 +140,8 @@ object Riscv{
 
     def fromID2EX           = "00"
     def fromEX2MEM          = "10"
-    def fromMEM2EX          = "01"
-
+    def fromMEM2WB          = "01"
+    def fromRF              = "00"
 
 
     def LR                  = M"00010--00000-----010-----0101111"

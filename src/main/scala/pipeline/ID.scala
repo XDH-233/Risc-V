@@ -186,21 +186,19 @@ case class control() extends Component{
     }.setName("")
 }
 
-object controlRTL extends App{
-    SpinalVerilog(new control())
-}
-
-
 case class branchPredict() extends Component{
     val io = new Bundle{
         val funct3 = in Bits(3 bits)
         val rs1 = in Bits(globalConfig.operandWidth bits)
         val rs2 = in Bits(globalConfig.operandWidth bits)
-        val branch = in Bool()
+        val ctrlBranch = in Bool()
         val flush = out Bool()
+        val branch = out Bool()
     }
     noIoPrefix()
-    when(io.branch){
+    io.flush := False
+    io.branch := False
+    when(io.ctrlBranch){
         when(io.funct3 === Riscv.BEQ_funct3){
             when(io.rs1.asSInt === io.rs2.asSInt){
                 io.flush := True
@@ -247,78 +245,7 @@ case class branchPredict() extends Component{
     }
 }
 
-case class forward() extends Component{
-    val io = new Bundle{
-        val id2exRs1 = in Bits(5 bits)
-        val id2exRs2 = in Bits(5 bits)
-        val ex2memRd = in Bits(5 bits)
-        val mem2wbRd = in Bits(5 bits)
-        val ex2memRegWrite = in Bool()
-        val mem2wbRegWrite = in Bool()
-        val ex2memRs2 = in Bits(5 bits)
-        val ex2memMemWrite = in Bool()
 
-        val forwardA = out Bits(2 bits)
-        val forwardB = out Bits(2 bits)
-        val forwardC = out Bool()
-        val forwardBranch = out Bits(2 bits)
-    }
-    noIoPrefix()
-    // default
-    io.forwardA := B(Riscv.fromID2EX)
-    io.forwardB := B(Riscv.fromID2EX)
-    // EX hazard
-    val exHar = new Area {
-        when(io.ex2memRegWrite &&
-            io.ex2memRd =/= 0 &&
-            io.ex2memRd === io.id2exRs1
-        ){
-            io.forwardA := B(Riscv.fromEX2MEM)
-        }
-
-        when(io.ex2memRegWrite &&
-            io.ex2memRd =/= 0 &&
-            io.ex2memRd === io.id2exRs2
-        ){
-            io.forwardB := B(Riscv.fromEX2MEM)
-        }
-    }.setName("")
-    // MEM hazard
-    val memHar = new Area{
-        when(io.mem2wbRegWrite &&
-            io.mem2wbRd =/= 0 &&
-            !(io.ex2memRegWrite && io.ex2memRd =/= 0 && io.ex2memRd === io.id2exRs1) &&
-            io.mem2wbRd === io.id2exRs1
-        ){
-            io.forwardA := B(Riscv.fromMEM2EX)
-        }
-
-        when(io.mem2wbRegWrite &&
-            io.mem2wbRd =/= 0 &&
-            !(io.ex2memRegWrite && io.ex2memRd =/= 0 && io.ex2memRd === io.id2exRs2) &&
-            io.mem2wbRd === io.id2exRs2
-        ){
-            io.forwardB := B(Riscv.fromMEM2EX)
-        }
-
-    }.setName("")
-    // load hazard
-    val loaddHar = new Area{
-        when(io.mem2wbRegWrite &&
-            io.mem2wbRd =/= 0 &&
-            io.ex2memMemWrite &&
-            io.mem2wbRd === io.ex2memRs2
-        ){
-            io.forwardC := True
-        }otherwise{
-            io.forwardC := False
-        }
-    }.setName("")
-
-    val BranchSupEX = new Area{
-
-    }
-}
 
 case class hazardDet() extends Component{
     val io = new Bundle{
@@ -328,6 +255,10 @@ case class hazardDet() extends Component{
         val if2idRs2 = in Bits(5 bits)
 
         val id2exRegWrite = in Bool()
+        
+        val mem2wbRegWrite = in Bool()
+        val mem2wbRd = in Bits(5 bits)
+        
         val branch = in Bool()
         val stall = out Bool()
     }
@@ -350,6 +281,16 @@ case class hazardDet() extends Component{
     }otherwise{
         io.stall := False
     }
-}
+    
+    // stall for branch in MEM
+    when(io.mem2wbRegWrite &&
+        io.mem2wbRd =/= 0 &&
+        ((io.if2idRs1 === io.mem2wbRd || io.if2idRs2 === io.mem2wbRd) && io.branch)
+    ){
+        io.stall := True
+    }otherwise{
+        io.stall := False
+    }
 
+}
 
