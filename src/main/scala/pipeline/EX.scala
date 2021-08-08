@@ -134,13 +134,13 @@ case class forward() extends Component{
 
 }
 
-case class alu() extends Component{
+case class alu(width: Int) extends Component{
     val io = new Bundle{
-        val ALUop = in Bits(4 bits)
-        val data1 = in Bits(globalConfig.operandWidth bits)
-        val data2 = in Bits(globalConfig.operandWidth bits)
-        val zero = out Bool()
-        val res = out Bits(globalConfig.operandWidth bits)
+        val ALUop = in  Bits(4 bits)
+        val data1 = in  Bits(width bits)
+        val data2 = in  Bits(width bits)
+        val zero  = out Bool()
+        val res   = out Bits(width bits)
     }
     noIoPrefix()
     io.zero := (io.res === 0)
@@ -206,6 +206,3 @@ case class alu() extends Component{
    }
 }
 
-object aluRTL extends App{
-    SpinalVerilog(new alu())
-}
