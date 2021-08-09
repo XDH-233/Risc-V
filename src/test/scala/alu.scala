@@ -41,12 +41,7 @@ object BigIntCov{
     }
 }
 
-
-
-
 object aluSimu extends App{
-
-
     import BitsSim._
     import BigIntCov._
 
@@ -112,10 +107,9 @@ object aluSimu extends App{
             printf(s"%0${dut.width}d\n", dut.UIntRes.toBits(dut.width))
         }
     }
-    SimConfig.withWave.compile(new alu(8)).doSim{dut=>
-        for(i <- 0 until 100000){
+    SimConfig.withWave.compile(new alu(30)).doSim{dut=>
+        for(i <- 0 until 100){
             dut.io.ALUop #=   scala.util.Random.nextInt(11)
-
             val op = dut.io.ALUop.toInt
             op match {
                 // ALU_RAM
@@ -123,9 +117,7 @@ object aluSimu extends App{
                     dut.init
                     println("---------------ALU_RAM------------------")
                     println(s"               *${i}*                  ")
-
                     dut.disUInt
-
                     if(dut.UIntData1 + dut.UIntData2 > BigInt(2).pow(dut.width) - 1){
                         println("overflow")
                     }else{
@@ -141,7 +133,6 @@ object aluSimu extends App{
                     dut.init
                     println("---------------ALU_ADD------------------")
                     println(s"               *${i}*                  ")
-
                     dut.disSInt
                     if((dut.SIntData1> 0 &&  dut.SIntData2 > 0 && dut.SIntRes <= 0) || (dut.SIntData1 < 0 && dut.SIntData2 < 0 && dut.SIntRes >= 0)){
                         println("overflow")
