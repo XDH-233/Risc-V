@@ -6,106 +6,143 @@ import spinal.sim._
 import spinal.core.sim._
 import spinal.lib._
 
-class StageCTRLBundle extends Bundle with IMasterSlave{
-    val stateOut = StageStateEnum()
 
-    override def asMaster(): Unit = {
-        out(stateOut)
-    }
-}
 
-object StageStateEnum extends SpinalEnum(binaryOneHot){
-    val FLUSH,STALL,ENABLE = newElement()    // Stage state
-}
-
-class Stage[T <: Bundle](gen: => T) extends Component{
-    val left:T= gen.flip()
-    val ctrl = slave(new StageCTRLBundle)
-    val right:T= createOutPort(left)
-
-    def <>(l:T,r:T):Unit={
-        l<>left
-        r<>right
-    }
-
-    def getInitData[T <: Data](data:T):Data={
-        data match {
-            case a:Bits => B(0)
-            case u:UInt => U(0)
-            case s:UInt => S(0)
-            case b:Bool => False
-            case e:SpinalEnumCraft[_] => e.spinalEnum.elements(0)
-        }
-    }
-    def defaultData[T <: Data](data:T): Unit={
-        data match {
-            case v:Vec[_] => v.foreach(a=>initData(a))
-            case a => a:= getInitData(a).asInstanceOf[T]
-        }
-    }
-    def initData[T <: Data](data:T): Unit ={
-        data match {
-            case v:Vec[_] => v.foreach(a=>initData(a))
-            case a => a.init(getInitData(a).asInstanceOf[T])
-        }
-    }
-
-    private def createOutPort(inBundle:Bundle):T= {
-        new Bundle {
-            for(i <- inBundle.elements){
-
-                val a =out (Reg(i._2.clone()))
-                initData(a)
-                valCallbackRec(a,i._1)
-                when(ctrl.stateOut===StageStateEnum.ENABLE){
-                    a := i._2
-                }elsewhen(ctrl.stateOut === StageStateEnum.FLUSH){
-                    defaultData(a)
-                }otherwise{   //Stall
-                    // 啥都不干，锁存
-                }
-
+trait stageOp {
+    this: Bundle =>
+    def toReg = {
+        for ((_, e) <- this.elements) {
+            e match {
+                case b: Bits => e setAsReg() init (B(0))
+                case u: UInt => e setAsReg() init (U(0))
+                case s: SInt => e setAsReg() init (S(0))
+                case l: Bool => e setAsReg() init (False)
             }
         }
-    }.asInstanceOf[T]
+    }
+    def doReset = {
+        for ((_, e) <- this.elements) {
+            e match {
+                case b: Bits => e := B(0)
+                case u: UInt => e := U(0)
+                case s: SInt => e := S(0)
+                case l: Bool => e := False
+            }
+        }
+    }
+}
+
+object Stages {
+    case class if2idB() extends Bundle with stageOp {
+        val PC   = UInt(globalConfig.PCWidth bits)
+        val inst = Bits(globalConfig.instWidth bits)
+    }
+
+    case class id2exB() extends Bundle with stageOp {
+        val regWrite                        = Bool()
+        val memtoReg                        = Bool()
+        val memRead                         = Bool()
+        val memWrite                        = Bool()
+        val ALUop                           = Bits(4 bits)
+        val ALUsrc                          = Bool()
+        val readData1, readData2, immGenOut = Bits(globalConfig.operandWidth bits)
+        val rs1, rs2, rd                    = UInt(5 bits)
+    }
+
+    case class ex2memB() extends Bundle with stageOp {
+        val regWrite         = Bool()
+        val memtoReg         = Bool()
+        val memRead          = Bool()
+        val memWrite         = Bool()
+        val ALUResult        = Bits(globalConfig.operandWidth bits)
+        val regFileReadData2 = Bits(globalConfig.operandWidth bits)
+        val rs2, rd          = UInt(5 bits)
+    }
+
+    case class mem2wbB() extends Bundle with stageOp {
+        val regWrite  = Bool()
+        val memtoReg  = Bool()
+        val readData  = Bits(globalConfig.operandWidth bits)
+        val ALUResult = Bits(globalConfig.operandWidth bits)
+        val rd        = UInt(5 bits)
+    }
 }
 
 
-object stages{
-    val if2id = new Bundle{
-        val PC = out UInt(log2Up(globalConfig.instNum) bits)
-        val inst = out Bits(globalConfig.operandWidth bits)
-        val flush = out Bool()
-    }
-
-    val id2ex = new Bundle{
-        val regWrite = out Bool()
-        val memtoReg = out Bool()
-        val memRead = out Bool()
-        val memWrite = out Bool()
-        val ALUop = out Bits(2 bits)
-        val ALUsrc = out Bool()
-        val readData1, readData2, immGenOut= out SInt(globalConfig.operandWidth bits)
-        val rs1, rs2, rd = out UInt(5 bits)
-    }
-
-    val ex2mem = new Bundle{
-        val regWrite = out Bool()
-        val memtoReg = out Bool()
-        val memRead = out Bool()
-        val memWrite = out Bool()
-        val ALUResult = out SInt(globalConfig.operandWidth bits)
-        val ALUData1 = out SInt(globalConfig.operandWidth bits)
-        val rs2, rd = out UInt(5 bits)
-    }
-    val mem2wb = new Bundle{
-        val regWrite = out Bool()
-        val memtoReg = out Bool()
-        val readData = out Bits(globalConfig.operandWidth bits)
-        val ALUResult = out SInt(globalConfig.operandWidth bits)
-        val rd = UInt(5 bits)
+class Stage[T <: Bundle with stageOp](signals: => T) extends Component {
+    val flush    = in Bool()
+    val stall    = in Bool()
+    val left : T = signals.asInput()
+    val right: T = signals.asOutput()
+    right.toReg
+    when(flush) {
+        right.doReset
+    } elsewhen (stall) {
+        //lock
+    } otherwise {
+        right <> left
     }
 }
+
+
+object StageRTL extends App {
+    SpinalConfig(
+        defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC, resetActiveLevel = HIGH)
+    ).generateVerilog(new Stage(Stages.if2idB()))
+}
+
+class if2idDut() extends Component {
+    val flush = in Bool()
+    val stall = in Bool()
+    val inst  = out Bits (globalConfig.operandWidth bits)
+    val In    = Stages.if2idB().asInput()
+
+    val IF2ID = new Stage(Stages.if2idB()).setDefinitionName("IF2ID")
+
+    IF2ID.left <> In
+    IF2ID.stall := stall
+    IF2ID.flush := flush
+
+    inst := IF2ID.right.inst
+}
+
+
+object if2idDutRTL extends App {
+    SpinalConfig(
+        defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC, resetActiveLevel = HIGH)
+    ).generateVerilog(new if2idDut())
+}
+
+object if2idDutSim extends App {
+    SimConfig.withWave.withConfig(SpinalConfig(
+        defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC, resetActiveLevel = HIGH),
+        defaultClockDomainFrequency = FixedFrequency(100 MHz)
+    )).compile(new if2idDut()).doSim { dut =>
+        dut.clockDomain.forkStimulus(10000)
+        dut.flush #= true
+        dut.stall #= false
+        dut.clockDomain.waitSampling(5)
+        for (i <- 0 until 100) {
+            val a = scala.util.Random.nextInt(3)
+            if (a == 0) {
+                dut.flush #= true
+                dut.stall #= false
+            } else if (a == 1) {
+                dut.flush #= false
+                dut.stall #= true
+            } else {
+                dut.flush #= false
+                dut.stall #= false
+            }
+            dut.In.randomize()
+            dut.clockDomain.waitSampling()
+        }
+    }
+}
+
+
+
+
 
 
 

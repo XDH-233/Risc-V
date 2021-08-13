@@ -107,9 +107,9 @@ object aluSimu extends App{
             printf(s"%0${dut.width}d\n", dut.UIntRes.toBits(dut.width))
         }
     }
-    SimConfig.withWave.compile(new alu(30)).doSim{dut=>
-        for(i <- 0 until 100){
-            dut.io.ALUop #=   scala.util.Random.nextInt(11)
+    SimConfig.withWave.compile(new alu(64)).doSim{dut=>
+        for(i <- 0 until 1000){
+            dut.io.ALUop #= 4 //  scala.util.Random.nextInt(11)
             val op = dut.io.ALUop.toInt
             op match {
                 // ALU_RAM
@@ -182,7 +182,7 @@ object aluSimu extends App{
                     println("---------------ALU_SLL------------------")
                     println(s"               *${i}*                    ")
                     dut.disUIntBits
-                    assert(dut.UIntData1.SLL(dut.width, dut.UIntData2.toInt) == dut.UIntRes)
+                    assert(dut.UIntData1.SLL(dut.width, (dut.UIntData2.toInt)) % (dut.width) == dut.UIntRes)
                 }
                 // ALU_SRL
                 case 5  =>{

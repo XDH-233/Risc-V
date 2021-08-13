@@ -1,3 +1,4 @@
-[debug] not up to date. inChanged = true, force = false
+[warn] spinalhdl-core_2.11-1.4.0-sources.jar no longer exists at /home/xdh311/.cache/coursier/v1/https/repo1.maven.org/maven2/com/github/spinalhdl/spinalhdl-core_2.11/1.4.0/spinalhdl-core_2.11-1.4.0-sources.jar
+[debug] not up to date. inChanged = false, force = false
 [debug] Updating ProjectRef(uri("file:/home/xdh311/IdeaProjects/Risc-V/"), "risc-v")...
 [debug] Done updating ProjectRef(uri("file:/home/xdh311/IdeaProjects/Risc-V/"), "risc-v")
