@@ -41,3 +41,4 @@ target/streams/_global/_global/csrLogger/_global/streams/out
 *.class
 *.cpp
 *.h
+*.v

@@ -5,7 +5,7 @@ import spinal.core._
 import spinal.core.sim._
 
 
-case class instMem(width: Int = 32, depth: Int = 128) extends Component {  // depth is the num of D-word
+case class instMem(width: Int = 32, depth: Int = 128) extends Component { // depth is the num of D-word
     require(isPow2(depth) && isPow2(width / 8), "depth is not pow(2)")
     val byteCount = width / 8 // => 4
     val io        = new Bundle {
@@ -19,7 +19,7 @@ case class instMem(width: Int = 32, depth: Int = 128) extends Component {  // de
     arr(3) = "8401155" // ld   x2,  8(x0)
     arr(4) = "16789891" // ld   x3, 16(x0)
     arr(5) = "3211827" // add  x4, x2, x3
-    arr(6) = "1075970739" // sub  x5, x5, x2
+    arr(6) = "1075970739" // sub  x5, x4, x2
     arr(7) = "2257715" // and  x6, x2, x4
     arr(8) = "2253747" // or   x7, x2, x4
     arr(9) = "40923171" // sd   x7, 32(x0)

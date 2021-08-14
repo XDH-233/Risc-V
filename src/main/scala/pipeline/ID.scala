@@ -77,7 +77,7 @@ case class control() extends Component {
         when(Riscv.isLoadInstOpcode(io.inst(Riscv.opcode))) {
             io.memRead := True
         } otherwise {
-            io.memRead := True
+            io.memRead := False
         }
     }.setName("")
 
@@ -263,12 +263,11 @@ case class hazardDet() extends Component {
         val stall = out Bool()
     }
     noIoPrefix()
+    io.stall := False
     when(io.id2exMemRead &&
-      (io.id2exRd === io.if2idRs1 || io.id2exRd === io.if2idRs2)
-    ) {
+      io.id2exRd =/= 0  &&
+      (io.id2exRd === io.if2idRs1 || io.id2exRd === io.if2idRs2)) {
         io.stall := True
-    } otherwise {
-        io.stall := False
     }
 
 
@@ -278,36 +277,39 @@ case class hazardDet() extends Component {
       ((io.id2exRd === io.if2idRs1 || io.id2exRd === io.if2idRs2) && io.branch)
     ) {
         io.stall := True
-    } otherwise {
-        io.stall := False
     }
-
     // stall for branch in MEM
     when(io.ex2memRegWrite &&
       io.ex2memRd =/= 0 &&
       (((io.if2idRs1 === io.ex2memRd) || (io.if2idRs2 === io.ex2memRd)) && io.branch)
     ) {
         io.stall := True
-    } otherwise {
-        io.stall := False
     }
 }
 
 case class registerFile(width: Int = 64) extends Component {
     val io = new Bundle {
         val readReg1, readReg2, writeReg = in UInt (5 bits)
-        val writeData                    = in SInt (width bits)
-        val readData1, readData2         = out SInt (width bits)
+        val writeData                    = in Bits(width bits)
+        val readData1, readData2         = out Bits(width bits)
         val RegWrite                     = in Bool()
     }
     noIoPrefix()
-    val regs = Vec(Reg(SInt(width bits)) init (0), 32)
+    val regs = Vec(Reg(Bits(width bits)) init (0), 32)
     when(io.RegWrite) {
         regs.access(io.writeReg) := io.writeData
     }
 
-    io.readData1 := regs.read(io.readReg1)
-    io.readData2 := regs.read(io.readReg2)
+    when(io.RegWrite && io.writeReg === io.readReg1){
+        io.readData1 := io.writeData
+    }otherwise{
+        io.readData1 := regs.read(io.readReg1)
+    }
+    when(io.RegWrite && io.writeReg === io.readReg2){
+        io.readData2 := io.writeData
+    }otherwise{
+        io.readData2 := regs.read(io.readReg2)
+    }
 }
 
 

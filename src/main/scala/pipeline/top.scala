@@ -50,7 +50,6 @@ case class top() extends Component {
     IF2ID.stall := hazDet.io.stall
     IF2ID.flush := BP.io.flush
 
-
     //--------------------------------ID------------------------------
     // control
     Ctrl.io.inst := IF2ID.right.inst
@@ -60,9 +59,11 @@ case class top() extends Component {
         RF.io.readReg2 := IF2ID.right.inst(Riscv.rs2Range).asUInt
         RF.io.writeReg := MEM2WB.right.rd
         RF.io.RegWrite := MEM2WB.right.regWrite
+        RF.io.writeData := writeBack
     }
     // hazard detect
     val hazDetInConnect = {
+        hazDet.io.branch         := Ctrl.io.Branch
         hazDet.io.id2exMemRead   := ID2EX.right.memRead
         hazDet.io.if2idRs1       := IF2ID.right.inst(Riscv.rs1Range).asUInt
         hazDet.io.id2exRd        := ID2EX.right.rd
@@ -114,17 +115,17 @@ case class top() extends Component {
         ID2EX.left.memtoReg := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.memtoReg)
         ID2EX.left.memRead  := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.memRead)
         ID2EX.left.memWrite := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.memWrite)
-        ID2EX.left.ALUop    := Mux(sel = hazDet.io.stall, whenTrue = B(0, 4 bits), whenFalse = Ctrl.io.ALUop)
+        ID2EX.left.ALUop    := Mux(sel = hazDet.io.stall, whenTrue = B(15, 4 bits), whenFalse = Ctrl.io.ALUop)
         ID2EX.left.ALUsrc   := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.ALUsrc)
 
-        ID2EX.left.readData1 := RF.io.readData1.asBits
-        ID2EX.left.readData2 := RF.io.readData1.asBits
-        ID2EX.left.immGenOut := ImmGen.io.immGenOut
-        ID2EX.left.rs1       := IF2ID.right.inst(Riscv.rs1Range).asUInt
-        ID2EX.left.rs2       := IF2ID.right.inst(Riscv.rs2Range).asUInt
-        ID2EX.left.rd        := IF2ID.right.inst(Riscv.rdRange).asUInt
-        ID2EX.flush := BP.io.flush
-        ID2EX.stall := hazDet.io.stall
+        ID2EX.left.readData1 := Mux(sel = hazDet.io.stall, whenTrue = B(0, globalConfig.operandWidth bits), whenFalse = RF.io.readData1.asBits)
+        ID2EX.left.readData2 := Mux(sel = hazDet.io.stall, whenTrue = B(0, globalConfig.operandWidth bits), whenFalse = RF.io.readData2.asBits)
+        ID2EX.left.immGenOut := Mux(sel = hazDet.io.stall, whenTrue = B(0, globalConfig.operandWidth bits), whenFalse = ImmGen.io.immGenOut)
+        ID2EX.left.rs1       := Mux(sel = hazDet.io.stall, whenTrue = U(0,5 bits), whenFalse = IF2ID.right.inst(Riscv.rs1Range).asUInt)
+        ID2EX.left.rs2       := Mux(sel = hazDet.io.stall, whenTrue = U(0, 5 bits), whenFalse = IF2ID.right.inst(Riscv.rs2Range).asUInt)
+        ID2EX.left.rd        := Mux(sel = hazDet.io.stall, whenTrue = U(0, 5 bits), whenFalse = IF2ID.right.inst(Riscv.rdRange).asUInt)
+        ID2EX.flush.clear()
+        ID2EX.stall.clear()
     }
 
 
@@ -133,36 +134,39 @@ case class top() extends Component {
 
     //------------------------------------------EX----------------------------------------------
     // ALU
-    ALU.io.ALUop := ID2EX.right.ALUop
-    switch(Forward.io.forwardA) {
-        is(B(Riscv.fromRF)) {
-            ALU.io.data1 := ID2EX.right.readData1
+    val ALUInConnect = {
+        ALU.io.ALUop := ID2EX.right.ALUop
+        switch(Forward.io.forwardA) {
+            is(B(Riscv.fromRF)) {
+                ALU.io.data1 := ID2EX.right.readData1
+            }
+            is(B(Riscv.fromMEM2WB)) {
+                ALU.io.data1 := writeBack
+            }
+            is(B(Riscv.fromEX2MEM)) {
+                ALU.io.data1 := EX2MEM.right.ALUResult
+            }
+            default {
+                ALU.io.data1 := ID2EX.right.readData1
+            }
         }
-        is(B(Riscv.fromMEM2WB)) {
-            ALU.io.data1 := writeBack
+        switch(Forward.io.forwardB) {
+            is(B(Riscv.fromRF)) {
+                forwardBData := ID2EX.right.readData2
+            }
+            is(B(Riscv.fromMEM2WB)) {
+                forwardBData := writeBack
+            }
+            is(B(Riscv.fromEX2MEM)) {
+                forwardBData := EX2MEM.right.ALUResult
+            }
+            default {
+                forwardBData := ID2EX.right.readData2
+            }
         }
-        is(B(Riscv.fromEX2MEM)) {
-            ALU.io.data1 := EX2MEM.right.ALUResult
-        }
-        default {
-            ALU.io.data1 := ID2EX.right.readData1
-        }
+        ALU.io.data2 := Mux(sel = ID2EX.right.ALUsrc, whenTrue = ID2EX.right.immGenOut, whenFalse = forwardBData)
     }
-    switch(Forward.io.forwardB) {
-        is(B(Riscv.fromRF)) {
-            forwardBData := ID2EX.right.readData2
-        }
-        is(B(Riscv.fromMEM2WB)) {
-            forwardBData := writeBack
-        }
-        is(B(Riscv.fromEX2MEM)) {
-            forwardBData := EX2MEM.right.ALUResult
-        }
-        default {
-            forwardBData := ID2EX.right.readData2
-        }
-    }
-    ALU.io.data2 := Mux(sel = Ctrl.io.ALUsrc, whenTrue = ID2EX.right.immGenOut, whenFalse = forwardBData)
+
     // forward
     val ForwardInputConnect = {
         Forward.io.id2exRs1       := ID2EX.right.rs1
@@ -179,7 +183,6 @@ case class top() extends Component {
         Forward.io.mem2wbMemtoReg := MEM2WB.right.memtoReg
         Forward.io.ex2memMemtoReg := EX2MEM.right.memtoReg
     }
-
     //**************************************EX/MEM*****************************************
     val EX2MEMLeftConnect = {
         EX2MEM.left.regWrite         := ID2EX.right.regWrite
@@ -193,7 +196,6 @@ case class top() extends Component {
         EX2MEM.stall.clear()
         EX2MEM.flush.clear()
     }
-
 
     //------------------------------------------MEM-----------------------------------------
     // dataMem
