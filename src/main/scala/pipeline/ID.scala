@@ -146,7 +146,7 @@ case class control() extends Component {
         }
 
         when(io.inst === Riscv.AND || io.inst === Riscv.ANDI) {
-            io.ALUop === B(Riscv.ALU_AND)
+            io.ALUop := B(Riscv.ALU_AND)
         }
     }.setName("")
 
@@ -193,52 +193,38 @@ case class branchPredict() extends Component {
         val readData2  = in Bits (globalConfig.operandWidth bits)
         val ctrlBranch = in Bool()
         val flush      = out Bool()
-        val branch     = out Bool()
     }
     noIoPrefix()
     io.flush := False
-    io.branch := False
     when(io.ctrlBranch) {
         when(io.funct3 === Riscv.BEQ_funct3) {
             when(io.readData1.asSInt === io.readData2.asSInt) {
                 io.flush := True
-            } otherwise {
-                io.flush := False
             }
         }
         when(io.funct3 === Riscv.BNE_funct3) {
             when(io.readData1.asSInt =/= io.readData2.asSInt) {
                 io.flush := True
-            } otherwise {
-                io.flush := False
             }
         }
         when(io.funct3 === Riscv.BLT_funct3) {
             when(io.readData1.asSInt < io.readData2.asSInt) {
                 io.flush := True
-            } otherwise {
-                io.flush := False
             }
         }
         when(io.funct3 === Riscv.BGE_funct3) {
             when(io.readData1.asSInt >= io.readData2.asSInt) {
                 io.flush := True
-            } otherwise {
-                io.flush := False
             }
         }
         when(io.funct3 === Riscv.BLTU_funct3) {
             when(io.readData1.asUInt < io.readData2.asUInt) {
                 io.flush := True
-            } otherwise {
-                io.flush := False
             }
         }
         when(io.funct3 === Riscv.BGEU_funct3) {
             when(io.readData1.asUInt >= io.readData2.asUInt) {
                 io.flush := True
-            } otherwise {
-                io.flush := False
             }
         }
 

@@ -42,3 +42,5 @@ target/streams/_global/_global/csrLogger/_global/streams/out
 *.cpp
 *.h
 *.v
+tmp/job_1/ALU.v
+tmp/job_1/Control.v

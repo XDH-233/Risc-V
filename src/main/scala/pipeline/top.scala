@@ -36,7 +36,7 @@ case class top() extends Component {
     // PC
     when(hazDet.io.stall) {
         PC := PC
-    } elsewhen (BP.io.branch) {
+    } elsewhen (BP.io.flush) {
         PC := ImmGen.io.immGenOut.asUInt.resize(PC.getWidth) + PC
     } otherwise {
         PC := PC + U(4, globalConfig.PCWidth bits)
@@ -203,7 +203,7 @@ case class top() extends Component {
         DataMem.io.memRead   := EX2MEM.right.memRead
         DataMem.io.memWrite  := EX2MEM.right.memWrite
         DataMem.io.address   := EX2MEM.right.ALUResult.asUInt.resize(DataMem.io.address.getWidth)
-        DataMem.io.writeData := Mux(sel = Forward.io.forwardC, whenTrue = MEM2WB.right.readData, whenFalse = EX2MEM.right.regFileReadData2)
+        DataMem.io.writeData := Mux(sel = Forward.io.forwardC, whenTrue = writeBack, whenFalse = EX2MEM.right.regFileReadData2)
     }
 
     //***************************************MEM/WB******************************************

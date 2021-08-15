@@ -83,6 +83,8 @@ case class forward() extends Component {
 
     // branch source hazard
     val branchHar = new Area {
+        io.forwardBranchRs1 := B(Riscv.fromRF)
+        io.forwardBranchRs2 := B(Riscv.fromRF)
         //----------------MEM-------------------------
         //rs1
         when(io.mem2wbRegWrite &&
@@ -92,8 +94,6 @@ case class forward() extends Component {
           io.ctrlBranch
         ) {
             io.forwardBranchRs1 := B(Riscv.fromMEM2WB)
-        } otherwise {
-            io.forwardBranchRs1 := B(Riscv.fromRF)
         }
         // rs2
         when(io.mem2wbRegWrite &&
@@ -103,8 +103,6 @@ case class forward() extends Component {
           io.ctrlBranch
         ) {
             io.forwardBranchRs2 := B(Riscv.fromMEM2WB)
-        } otherwise {
-            io.forwardBranchRs2 := B(Riscv.fromRF)
         }
         //----------------EX-------------------------
         // rs1
@@ -115,8 +113,6 @@ case class forward() extends Component {
           io.ctrlBranch
         ) {
             io.forwardBranchRs1 := B(Riscv.fromEX2MEM)
-        } otherwise {
-            io.forwardBranchRs1 := B(Riscv.fromRF)
         }
         // rs2
         when(io.ex2memRegWrite &&
@@ -126,8 +122,6 @@ case class forward() extends Component {
           io.ctrlBranch
         ) {
             io.forwardBranchRs2 := B(Riscv.fromEX2MEM)
-        } otherwise {
-            io.forwardBranchRs2 := B(Riscv.fromRF)
         }
 
     }.setName("")
