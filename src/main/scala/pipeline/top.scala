@@ -36,8 +36,8 @@ case class top() extends Component {
     // PC
     when(hazDet.io.stall) {
         PC := PC
-    } elsewhen (BP.io.flush) {
-        PC := ImmGen.io.immGenOut.asUInt.resize(PC.getWidth) + PC
+    } elsewhen (BP.io.flush || Ctrl.io.JR || Ctrl.io.J) {
+        PC := ImmGen.io.immGenOut.asUInt.resize(PC.getWidth) + IF2ID.right.PC
     } otherwise {
         PC := PC + U(4, globalConfig.PCWidth bits)
     }
@@ -115,7 +115,7 @@ case class top() extends Component {
         ID2EX.left.memtoReg := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.memtoReg)
         ID2EX.left.memRead  := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.memRead)
         ID2EX.left.memWrite := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.memWrite)
-        ID2EX.left.ALUop    := Mux(sel = hazDet.io.stall, whenTrue = B(15, 4 bits), whenFalse = Ctrl.io.ALUop)
+        ID2EX.left.ALUop    := Mux(sel = hazDet.io.stall, whenTrue = B(15, 4 bits), whenFalse = Ctrl.io.ALUop)       // can't flush to 0
         ID2EX.left.ALUsrc   := Mux(sel = hazDet.io.stall, whenTrue = False, whenFalse = Ctrl.io.ALUsrc)
 
         ID2EX.left.readData1 := Mux(sel = hazDet.io.stall, whenTrue = B(0, globalConfig.operandWidth bits), whenFalse = RF.io.readData1.asBits)

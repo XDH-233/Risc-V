@@ -1,4 +1,5 @@
 import pipeline._
+import BigIntAndString._
 
 
 import spinal.core._
@@ -12,7 +13,6 @@ object topRTL extends App{
         defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC, resetActiveLevel = HIGH)
     ).generateVerilog(new top())
 }
-
 
 
 object topSim extends App{

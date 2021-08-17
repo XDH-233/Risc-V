@@ -109,6 +109,13 @@ object Riscv{
     def isJType(opcode: Bits)   =   opcode === M"1101111"
     def isSType(opcode: Bits)   =   opcode === M"0100011"
 
+    def isBType(opcode: String)   =   opcode == "1100011"
+    def isRType(opcode: String)   =   opcode == "0110011" || opcode == "0111011"
+    def isIType(opcode: String)   =   opcode == "0000011" || opcode == "1100111" || opcode == "0010011" || opcode == "0011011"
+    def isUType(opcode: String)   =   opcode == "0110111" || opcode == "0010111"
+    def isJType(opcode: String)   =   opcode == "1101111"
+    def isSType(opcode: String)   =   opcode == "0100011"
+
     def isLoadInstOpcode(opcode: Bits)  = opcode    === M"0000011"
     def loadByte            = "000"
     def loadByteU           = "001"

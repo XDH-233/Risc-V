@@ -5,45 +5,10 @@ import spinal.sim._
 import spinal.core.sim._
 import spinal.lib._
 
-object BitsSim{
-    implicit class BitsGetSignedBigInt(bt: Bits){
-        def getSign: BigInt = {
-            val width = bt.getWidth
-            var num = bt.toBigInt
-            if(width == num.bitLength){ // negative
-                if(num.clearBit(width - 1) == 0){
-                    return 0 - num
-                }
-                else
-                    num = num.clearBit(width - 1) - BigInt(1)
-                for(i <- 0 until width - 1){
-                    num = num.flipBit(i)
-                }
-                return BigInt(0) - num
-            }
-            return num
-        }
-    }
-}
-object BigIntCov{
-    implicit class BigIntToBinary(num:BigInt){
-        def toBits(width: Int): BigInt ={
-            var res = BigInt(0)
-            for(i <- (0 until width).reverse){
-                res = res * 10
-                if(num.testBit(i)){
-                    res = res + 1
-                }
-            }
-            return res
-        }
-        def SLL(width: Int, sham: Int) =  (num << sham) & BigInt((1l << width) - 1)
-    }
-}
 
 object aluSimu extends App{
     import BitsSim._
-    import BigIntCov._
+    import BigIntAndString._
 
     implicit class aluSimFuct(dut: alu) {
         def init = {
@@ -83,8 +48,8 @@ object aluSimu extends App{
             printf("% 10d\n", dut.UIntData2)
             println("-------------------")
             printf("% 10d\n", dut.UIntRes)
-            printf(s"%0${dut.width}d\n", dut.UIntData1.toBits(dut.width) )
-            printf(s"%0${dut.width}d\n", dut.UIntRes.toBits(dut.width))
+            println( dut.UIntData1.toBits(dut.width) )
+            println( dut.UIntRes.toBits(dut.width))
         }
 
         def disSIntBits = {
@@ -92,8 +57,8 @@ object aluSimu extends App{
             printf("% 10d\n", dut.SIntData2)
             println("-------------------")
             printf("% 10d\n", dut.SIntRes)
-            printf(s"%0${dut.width}d\n", dut.SIntData1.toBits(dut.width) )
-            printf(s"%0${dut.width}d\n", dut.SIntRes.toBits(dut.width))
+            println(dut.SIntData1.toBits(dut.width) )
+            println(dut.SIntRes.toBits(dut.width))
         }
 
         def disLogical = {
@@ -101,14 +66,14 @@ object aluSimu extends App{
             printf("% 10d\n", dut.UIntData2)
             println("-------------------")
             printf("% 10d\n", dut.UIntRes)
-            printf(s"%0${dut.width}d\n", dut.UIntData1.toBits(dut.width) )
-            printf(s"%0${dut.width}d\n", dut.UIntData2.toBits(dut.width))
+            println(dut.UIntData1.toBits(dut.width) )
+            println(dut.UIntData2.toBits(dut.width))
             println("-------------------")
-            printf(s"%0${dut.width}d\n", dut.UIntRes.toBits(dut.width))
+            println(dut.UIntRes.toBits(dut.width))
         }
     }
-    SimConfig.withWave.compile(new alu(64)).doSim{dut=>
-        for(i <- 0 until 1000){
+    SimConfig.withWave.compile(new alu(12)).doSim{dut=>
+        for(i <- 0 until 100){
             dut.io.ALUop #= 4 //  scala.util.Random.nextInt(11)
             val op = dut.io.ALUop.toInt
             op match {
@@ -179,14 +144,18 @@ object aluSimu extends App{
                 // ALU_SLL
                 case 4  =>{
                     dut.initShift
+//                    dut.io.data1 #= 1403
+//                    dut.io.data2 #= 11
                     println("---------------ALU_SLL------------------")
                     println(s"               *${i}*                    ")
                     dut.disUIntBits
-                    assert(dut.UIntData1.SLL(dut.width, (dut.UIntData2.toInt)) % (dut.width) == dut.UIntRes)
+                    assert(dut.UIntData1.SLL(dut.width, dut.UIntData2.toInt)  == dut.UIntRes)
                 }
                 // ALU_SRL
                 case 5  =>{
-                    dut.initShift
+                    //dut.initShift
+                    dut.io.data1 #= 1403
+                    dut.io.data2 #= 11
                     println("---------------ALU_SRL------------------")
                     println(s"               *${i}*                    ")
                     dut.disUIntBits
