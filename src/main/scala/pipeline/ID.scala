@@ -86,7 +86,9 @@ case class control() extends Component {
         when(io.inst === Riscv.ADD ||
           io.inst === Riscv.ADDI ||
           io.inst === Riscv.ADDW ||
-          io.inst === Riscv.ADDIW) {
+          io.inst === Riscv.ADDIW ||
+          io.inst === Riscv.JALR
+        ) {
             io.ALUop := B(Riscv.ALU_ADD)
         }
 
@@ -189,6 +191,7 @@ case class control() extends Component {
 case class branchPredict() extends Component {
     val io = new Bundle {
         val funct3     = in Bits (3 bits)
+        val stall      = in Bool()
         val readData1  = in Bits (globalConfig.operandWidth bits)
         val readData2  = in Bits (globalConfig.operandWidth bits)
         val ctrlBranch = in Bool()
@@ -196,38 +199,39 @@ case class branchPredict() extends Component {
     }
     noIoPrefix()
     io.flush := False
-    when(io.ctrlBranch) {
-        when(io.funct3 === Riscv.BEQ_funct3) {
-            when(io.readData1.asSInt === io.readData2.asSInt) {
-                io.flush := True
+    when(!io.stall){
+        when(io.ctrlBranch) {
+            when(io.funct3 === Riscv.BEQ_funct3) {
+                when(io.readData1.asSInt === io.readData2.asSInt) {
+                    io.flush := True
+                }
+            }
+            when(io.funct3 === Riscv.BNE_funct3) {
+                when(io.readData1.asSInt =/= io.readData2.asSInt) {
+                    io.flush := True
+                }
+            }
+            when(io.funct3 === Riscv.BLT_funct3) {
+                when(io.readData1.asSInt < io.readData2.asSInt) {
+                    io.flush := True
+                }
+            }
+            when(io.funct3 === Riscv.BGE_funct3) {
+                when(io.readData1.asSInt >= io.readData2.asSInt) {
+                    io.flush := True
+                }
+            }
+            when(io.funct3 === Riscv.BLTU_funct3) {
+                when(io.readData1.asUInt < io.readData2.asUInt) {
+                    io.flush := True
+                }
+            }
+            when(io.funct3 === Riscv.BGEU_funct3) {
+                when(io.readData1.asUInt >= io.readData2.asUInt) {
+                    io.flush := True
+                }
             }
         }
-        when(io.funct3 === Riscv.BNE_funct3) {
-            when(io.readData1.asSInt =/= io.readData2.asSInt) {
-                io.flush := True
-            }
-        }
-        when(io.funct3 === Riscv.BLT_funct3) {
-            when(io.readData1.asSInt < io.readData2.asSInt) {
-                io.flush := True
-            }
-        }
-        when(io.funct3 === Riscv.BGE_funct3) {
-            when(io.readData1.asSInt >= io.readData2.asSInt) {
-                io.flush := True
-            }
-        }
-        when(io.funct3 === Riscv.BLTU_funct3) {
-            when(io.readData1.asUInt < io.readData2.asUInt) {
-                io.flush := True
-            }
-        }
-        when(io.funct3 === Riscv.BGEU_funct3) {
-            when(io.readData1.asUInt >= io.readData2.asUInt) {
-                io.flush := True
-            }
-        }
-
     }
 }
 
@@ -245,6 +249,7 @@ case class hazardDet() extends Component {
         val ex2memRd       = in UInt (5 bits)
 
         val branch = in Bool()
+        val JR = in Bool()
 
         val stall = out Bool()
     }
@@ -257,20 +262,21 @@ case class hazardDet() extends Component {
     }
 
 
-    // stall for branch in EX
+    // stall for branch or JR in EX
     when(io.id2exRegWrite &&
       io.id2exRd =/= 0 &&
-      ((io.id2exRd === io.if2idRs1 || io.id2exRd === io.if2idRs2) && io.branch)
+      ((io.id2exRd === io.if2idRs1 || io.id2exRd === io.if2idRs2) && (io.branch || io.JR))
     ) {
         io.stall := True
     }
     // stall for branch in MEM
     when(io.ex2memRegWrite &&
       io.ex2memRd =/= 0 &&
-      (((io.if2idRs1 === io.ex2memRd) || (io.if2idRs2 === io.ex2memRd)) && io.branch)
+      (((io.if2idRs1 === io.ex2memRd) || (io.if2idRs2 === io.ex2memRd)) && (io.branch || io.JR))
     ) {
         io.stall := True
     }
+
 }
 
 case class registerFile(width: Int = 64) extends Component {

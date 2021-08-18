@@ -16,6 +16,10 @@ object topRTL extends App{
 
 
 object topSim extends App{
+    implicit class topSimMethod(dut: top){
+
+    }
+
     SimConfig.withWave.withConfig(SpinalConfig(
         defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC, resetActiveLevel = HIGH),
         defaultClockDomainFrequency = FixedFrequency(100 MHz)

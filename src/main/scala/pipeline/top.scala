@@ -34,21 +34,25 @@ case class top() extends Component {
 
     //-------------------------------------IF---------------------
     // PC
+    val readData1PC = Bits(globalConfig.operandWidth bits)
     when(hazDet.io.stall) {
         PC := PC
-    } elsewhen (BP.io.flush || Ctrl.io.JR || Ctrl.io.J) {
+    } elsewhen (BP.io.flush || Ctrl.io.J) {
         PC := ImmGen.io.immGenOut.asUInt.resize(PC.getWidth) + IF2ID.right.PC
-    } otherwise {
+    }elsewhen(Ctrl.io.JR){
+        PC := (ImmGen.io.immGenOut.asUInt + readData1PC.asUInt).resize(globalConfig.PCWidth) //TODO negative?
+    }otherwise {
         PC := PC + U(4, globalConfig.PCWidth bits)
     }
+
     // inst
     instructionMem.io.address := PC
 
     //********************************IF/ID***************************
     IF2ID.left.inst := instructionMem.io.instruction
-    IF2ID.left.PC := PC
-    IF2ID.stall := hazDet.io.stall
-    IF2ID.flush := BP.io.flush
+    IF2ID.left.PC   := PC
+    IF2ID.stall     := hazDet.io.stall
+    IF2ID.flush     := BP.io.flush | Ctrl.io.J | (Ctrl.io.JR && !hazDet.io.stall)
 
     //--------------------------------ID------------------------------
     // control
@@ -64,6 +68,7 @@ case class top() extends Component {
     // hazard detect
     val hazDetInConnect = {
         hazDet.io.branch         := Ctrl.io.Branch
+        hazDet.io.JR             := Ctrl.io.JR
         hazDet.io.id2exMemRead   := ID2EX.right.memRead
         hazDet.io.if2idRs1       := IF2ID.right.inst(Riscv.rs1Range).asUInt
         hazDet.io.id2exRd        := ID2EX.right.rd
@@ -73,20 +78,26 @@ case class top() extends Component {
         hazDet.io.ex2memRd       := EX2MEM.right.rd
     }
 
-    // branch prediction
+    // branch prediction and JALR readData1PC
     BP.io.ctrlBranch := Ctrl.io.Branch
+    BP.io.funct3 := IF2ID.right.inst(Riscv.funct3Range)
+    BP.io.stall := hazDet.io.stall
     switch(Forward.io.forwardBranchRs1) {
         is(B(Riscv.fromRF)) {
             BP.io.readData1 := RF.io.readData1.asBits
+            readData1PC := RF.io.readData1
         }
         is(B(Riscv.fromEX2MEM)) {
             BP.io.readData1 := EX2MEM.right.ALUResult
+            readData1PC := EX2MEM.right.ALUResult
         }
         is(B(Riscv.fromMEM2WB)) {
             BP.io.readData1 := writeBack
+            readData1PC := writeBack
         }
         default {
             BP.io.readData1 := RF.io.readData1.asBits
+            readData1PC := RF.io.readData1
         }
     }
     switch(Forward.io.forwardBranchRs2) {
@@ -103,8 +114,6 @@ case class top() extends Component {
             BP.io.readData2 := RF.io.readData2.asBits
         }
     }
-    BP.io.funct3 := IF2ID.right.inst(Riscv.funct3Range)
-
     // immGen
     ImmGen.io.inst := IF2ID.right.inst
 
@@ -124,6 +133,9 @@ case class top() extends Component {
         ID2EX.left.rs1       := Mux(sel = hazDet.io.stall, whenTrue = U(0,5 bits), whenFalse = IF2ID.right.inst(Riscv.rs1Range).asUInt)
         ID2EX.left.rs2       := Mux(sel = hazDet.io.stall, whenTrue = U(0, 5 bits), whenFalse = IF2ID.right.inst(Riscv.rs2Range).asUInt)
         ID2EX.left.rd        := Mux(sel = hazDet.io.stall, whenTrue = U(0, 5 bits), whenFalse = IF2ID.right.inst(Riscv.rdRange).asUInt)
+        ID2EX.left.PC4       := IF2ID.right.PC + U(4, globalConfig.PCWidth bits)
+        ID2EX.left.J         := Ctrl.io.J
+        ID2EX.left.JR        := Ctrl.io.JR
         ID2EX.flush.clear()
         ID2EX.stall.clear()
     }
@@ -182,6 +194,7 @@ case class top() extends Component {
         Forward.io.ctrlBranch     := Ctrl.io.Branch
         Forward.io.mem2wbMemtoReg := MEM2WB.right.memtoReg
         Forward.io.ex2memMemtoReg := EX2MEM.right.memtoReg
+        Forward.io.ctrlJR         := Ctrl.io.JR
     }
     //**************************************EX/MEM*****************************************
     val EX2MEMLeftConnect = {
@@ -189,10 +202,14 @@ case class top() extends Component {
         EX2MEM.left.memtoReg         := ID2EX.right.memtoReg
         EX2MEM.left.memRead          := ID2EX.right.memRead
         EX2MEM.left.memWrite         := ID2EX.right.memWrite
-        EX2MEM.left.ALUResult        := ALU.io.res
         EX2MEM.left.regFileReadData2 := forwardBData
         EX2MEM.left.rs2              := ID2EX.right.rs2
         EX2MEM.left.rd               := ID2EX.right.rd
+        when(ID2EX.right.J || ID2EX.right.JR){
+            EX2MEM.left.ALUResult := ID2EX.right.PC4.resize(globalConfig.operandWidth bits).asBits
+        }otherwise{
+            EX2MEM.left.ALUResult        := ALU.io.res
+        }
         EX2MEM.stall.clear()
         EX2MEM.flush.clear()
     }

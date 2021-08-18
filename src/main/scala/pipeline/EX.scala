@@ -20,6 +20,7 @@ case class forward() extends Component {
         val if2idRs1       = in UInt (5 bits)
         val if2idRs2       = in UInt (5 bits)
         val ctrlBranch     = in Bool()
+        val ctrlJR         = in Bool()
         val mem2wbMemtoReg = in Bool()
         val ex2memMemtoReg = in Bool()
 
@@ -34,7 +35,7 @@ case class forward() extends Component {
     io.forwardA := B(Riscv.fromID2EX)
     io.forwardB := B(Riscv.fromID2EX)
     // EX hazard
-    val exHar    = new Area {
+    val exHar    ={
         when(io.ex2memRegWrite &&
           io.ex2memRd =/= 0 &&
           io.ex2memRd === io.id2exRs1
@@ -48,9 +49,9 @@ case class forward() extends Component {
         ) {
             io.forwardB := B(Riscv.fromEX2MEM)
         }
-    }.setName("")
+    }
     // MEM hazard
-    val memHar   = new Area {
+    val memHar   = {
         when(io.mem2wbRegWrite &&
           io.mem2wbRd =/= 0 &&
           !(io.ex2memRegWrite && io.ex2memRd =/= 0 && io.ex2memRd === io.id2exRs1) &&
@@ -67,9 +68,9 @@ case class forward() extends Component {
             io.forwardB := B(Riscv.fromMEM2WB)
         }
 
-    }.setName("")
+    }
     // load hazard
-    val loaddHar = new Area {
+    val loaddHar = {
         when(io.mem2wbRegWrite &&
           io.mem2wbRd =/= 0 &&
           io.ex2memMemWrite &&
@@ -79,28 +80,28 @@ case class forward() extends Component {
         } otherwise {
             io.forwardC := False
         }
-    }.setName("")
+    }
 
     // branch source hazard
-    val branchHar = new Area {
+    val branchHar = {
         io.forwardBranchRs1 := B(Riscv.fromRF)
         io.forwardBranchRs2 := B(Riscv.fromRF)
         //----------------MEM-------------------------
         //rs1
         when(io.mem2wbRegWrite &&
           io.mem2wbRd =/= 0 &&
-          io.mem2wbMemtoReg &&
+//          io.mem2wbMemtoReg &&
           io.mem2wbRd === io.if2idRs1 &&
-          io.ctrlBranch
+          (io.ctrlBranch || io.ctrlJR)
         ) {
             io.forwardBranchRs1 := B(Riscv.fromMEM2WB)
         }
         // rs2
         when(io.mem2wbRegWrite &&
           io.mem2wbRd =/= 0 &&
-          io.mem2wbMemtoReg &&
+//          io.mem2wbMemtoReg &&
           io.mem2wbRd === io.if2idRs2 &&
-          io.ctrlBranch
+          (io.ctrlBranch || io.ctrlJR)
         ) {
             io.forwardBranchRs2 := B(Riscv.fromMEM2WB)
         }
@@ -109,7 +110,7 @@ case class forward() extends Component {
         when(io.ex2memRegWrite &&
           io.ex2memRd =/= 0 &&
           io.ex2memRd === io.if2idRs1 &&
-          (!io.ex2memMemtoReg) &&
+          (!io.ex2memMemtoReg) &&  //  guarantee that reg -> reg not mem -> reg
           io.ctrlBranch
         ) {
             io.forwardBranchRs1 := B(Riscv.fromEX2MEM)
@@ -123,9 +124,7 @@ case class forward() extends Component {
         ) {
             io.forwardBranchRs2 := B(Riscv.fromEX2MEM)
         }
-
-    }.setName("")
-
+    }
 }
 
 case class alu(width: Int) extends Component {

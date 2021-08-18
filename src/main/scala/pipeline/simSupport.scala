@@ -123,7 +123,8 @@ object INST{
         val rd    : String = Rd.toBits(5)
         val opcode: String = name.ToString.opcode
         val imm            = Imm.toBits(12)
-        val immUJ           = Imm.toBits(20)
+        val immUJ          = Imm.toBits(21).substring(0, 20)
+        val immB           = Imm.toBits(13).substring(0, 12)
         if(isRType(opcode)){
             return (funct7 + rs2 + rs1 + funct3 + rd + opcode).UBSToBigInt
         }else if(isIType(opcode)){
@@ -131,9 +132,8 @@ object INST{
         }else if(isSType(opcode)){
             return (imm.substring(0, 7) + rs2 + rs1 + funct3 + imm.substring(7, 12) + opcode).UBSToBigInt
         }else if(isBType(opcode)){
-            return (imm.substring(0,1) + imm.substring(2, 8) + rs2 + rs1 + funct3 + imm.substring(8, 12) + imm.substring(1,2) + opcode).UBSToBigInt
+            return (immB.substring(0,1) + immB.substring(2, 8) + rs2 + rs1 + funct3 + immB.substring(8, 12) + immB.substring(1,2) + opcode).UBSToBigInt
         } else if(isJType(opcode)){
-            //TODO tobe revised
             return (immUJ.substring(0, 1) + immUJ.substring(10, 20) + immUJ.substring(9, 10) + immUJ.substring(1, 9) + rd + opcode).UBSToBigInt
         }else{ // U-Type
             //TODO to be revised

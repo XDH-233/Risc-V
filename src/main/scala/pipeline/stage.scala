@@ -47,6 +47,9 @@ object Stages {
         val ALUsrc                          = Bool()
         val readData1, readData2, immGenOut = Bits(globalConfig.operandWidth bits)
         val rs1, rs2, rd                    = UInt(5 bits)
+        val PC4                             = UInt(globalConfig.PCWidth bits)
+        val J                               = Bool()
+        val JR                              = Bool()
     }
 
     case class ex2memB() extends Bundle with stageOp {
