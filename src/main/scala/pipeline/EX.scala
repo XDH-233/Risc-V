@@ -23,6 +23,8 @@ case class forward() extends Component {
         val ctrlJR         = in Bool()
         val mem2wbMemtoReg = in Bool()
         val ex2memMemtoReg = in Bool()
+        val lui            = in Bool()
+        val auiPC          = in Bool()
 
         val forwardA         = out Bits (2 bits)
         val forwardB         = out Bits (2 bits)
@@ -90,18 +92,16 @@ case class forward() extends Component {
         //rs1
         when(io.mem2wbRegWrite &&
           io.mem2wbRd =/= 0 &&
-//          io.mem2wbMemtoReg &&
           io.mem2wbRd === io.if2idRs1 &&
-          (io.ctrlBranch || io.ctrlJR)
+          (io.ctrlBranch || io.ctrlJR)   // same way forward for JALR
         ) {
             io.forwardBranchRs1 := B(Riscv.fromMEM2WB)
         }
         // rs2
         when(io.mem2wbRegWrite &&
           io.mem2wbRd =/= 0 &&
-//          io.mem2wbMemtoReg &&
           io.mem2wbRd === io.if2idRs2 &&
-          (io.ctrlBranch || io.ctrlJR)
+          io.ctrlBranch
         ) {
             io.forwardBranchRs2 := B(Riscv.fromMEM2WB)
         }
@@ -111,7 +111,7 @@ case class forward() extends Component {
           io.ex2memRd =/= 0 &&
           io.ex2memRd === io.if2idRs1 &&
           (!io.ex2memMemtoReg) &&  //  guarantee that reg -> reg not mem -> reg
-          io.ctrlBranch
+          (io.ctrlBranch || io.ctrlJR) // same way forward for JALR
         ) {
             io.forwardBranchRs1 := B(Riscv.fromEX2MEM)
         }
@@ -197,5 +197,45 @@ case class alu(width: Int) extends Component {
             io.res := B(0)
         }
     }
+}
+
+case class typeConv() extends Component{
+    val io = new Bundle{
+        val en = in Bool()
+        val loadType = in Bits(3 bits)
+        val dataIn = in Bits(globalConfig.operandWidth bits)
+        val dataOut = out Bits(globalConfig.operandWidth bits)
+    }
+    noIoPrefix()
+    io.dataOut := io.dataIn
+    when(io.en){
+        switch(io.loadType){
+            is(B(Riscv.loadDefault)){
+                io.dataOut := io.dataIn
+            }
+            is(B(Riscv.loadByte)){
+                io.dataOut := B((globalConfig.operandWidth - 8 - 1 downto 0) -> io.dataIn.msb) ## io.dataIn(7 downto 0)
+            }
+            is(B(Riscv.loadByteU)){
+                io.dataOut := B((globalConfig.operandWidth - 8 - 1 downto 0) -> False) ## io.dataIn(7 downto 0)
+            }
+            is(B(Riscv.loadHalfWord)){
+                io.dataOut := B((globalConfig.operandWidth - 16 - 1 downto 0) -> io.dataIn.msb) ## io.dataIn(15 downto 0)
+            }
+            is(B(Riscv.loadHalfWordU)){
+                io.dataOut := B((globalConfig.operandWidth - 16 - 1 downto 0) -> False) ## io.dataIn(15 downto 0)
+            }
+            is(B(Riscv.loadWord)){
+                io.dataOut := B((globalConfig.operandWidth - 32 - 1 downto 0) -> io.dataIn.msb) ## io.dataIn(31 downto 0)
+            }
+            is(B(Riscv.loadWordU)){
+                io.dataOut := B((globalConfig.operandWidth - 32 - 1 downto 0) -> False) ## io.dataIn(31 downto 0)
+            }
+            default{
+                io.dataOut := io.dataIn
+            }
+        }
+    }
+
 }
 

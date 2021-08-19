@@ -86,7 +86,12 @@ object BigIntAndString{
 
 object BitsSim{
     def main(args: Array[String]): Unit = {
-        println(INST(name = Riscv.ADD, Rd = 4, Rs1 = 2, Rs2 = 3))
+        import INST._
+        import Riscv._
+        import BigIntAndString._
+
+        println(INST(name = LD, Rd = x3, Rs1 = x0, Imm = 4000).toBits(32))
+        println(BigInt(4000).toBits(12))
 
     }
     implicit class SignedBigInt(bt: Bits){
@@ -140,37 +145,38 @@ object INST{
             return (immUJ.substring(0, 20) + rd + opcode).UBSToBigInt
         }
     }
+    def x0:  BigInt = 0
+    def x1:  BigInt = 1
+    def x2:  BigInt = 2
+    def x3:  BigInt = 3
+    def x4:  BigInt = 4
+    def x5:  BigInt = 5
+    def x6:  BigInt = 6
+    def x7:  BigInt = 7
+    def x8:  BigInt = 8
+    def x9:  BigInt = 9
+    def x10: BigInt = 10
+    def x11: BigInt = 11
+    def x12: BigInt = 12
+    def x13: BigInt = 13
+    def x14: BigInt = 14
+    def x15: BigInt = 15
+    def x16: BigInt = 16
+    def x17: BigInt = 17
+    def x18: BigInt = 18
+    def x19: BigInt = 19
+    def x20: BigInt = 20
+    def x21: BigInt = 21
+    def x22: BigInt = 22
+    def x23: BigInt = 23
+    def x24: BigInt = 24
+    def x25: BigInt = 25
+    def x26: BigInt = 26
+    def x27: BigInt = 27
+    def x28: BigInt = 28
+    def x29: BigInt = 29
+    def x30: BigInt = 30
+    def x32: BigInt = 31
 
-
-//
-//    //------------------------------I-Type-------------------------------------------
-//    def apply(name: MaskedLiteral, Rd: BigInt, Imm: BigInt, Rs1: BigInt):BigInt={
-//        val imm   : String = Imm.toBits(12)
-//        val rs1            = Rs1.toBits(5)
-//        val funct3         = name.ToString.funct3
-//        val rd    : String = Rd.toBits(5)
-//        val opcode: String = name.ToString.opcode
-//        return (imm + rs1 + funct3 + rd + opcode).UBSToBigInt
-//    }
-//
-//    //-------------------------------S-Type------------------------------------------
-//    def apply(name:MaskedLiteral, Rs2:BigInt, Imm: BigInt, Rs1: BigInt): BigInt={
-//        val imm   : String = Imm.toBits(12)
-//        val rs2            = Rs2.toBits(5)
-//        val rs1   : String = Rs1.toBits(5)
-//        val funct3: String = name.ToString.funct3
-//        val opcode: String = name.ToString.opcode
-//        return (imm.substring(0, 7) + rs2 + rs1 + funct3 + imm.substring(7, 12) + opcode).UBSToBigInt
-//    }
-//
-//    //-------------------------------B-type------------------------------------------------
-//    def apply(name: MaskedLiteral, Rs1: BigInt, Rs2: BigInt, Imm: BigInt) :BigInt={
-//        val imm   : String = Imm.toBits(13).substring(0, 12)
-//        val rs2             = Rs2.toBits(5)
-//        val rs1   : String = Rs1.toBits(5)
-//        val funct3: String = name.ToString.funct3
-//        val opcode: String = name.ToString.opcode
-//        return (imm.substring(0,1) + imm.substring(2, 8) + rs2 + rs1 + funct3 + imm.substring(8, 12) + imm.substring(1,2) + opcode).UBSToBigInt
-//    }
 
 }

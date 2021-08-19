@@ -50,6 +50,10 @@ object Stages {
         val PC4                             = UInt(globalConfig.PCWidth bits)
         val J                               = Bool()
         val JR                              = Bool()
+        val lui                             = Bool()
+        val auiPC                           = Bool()
+        val PCimm                           = Bits(globalConfig.operandWidth bits)
+        val loadType                        = Bits(3 bits)
     }
 
     case class ex2memB() extends Bundle with stageOp {
@@ -60,6 +64,7 @@ object Stages {
         val ALUResult        = Bits(globalConfig.operandWidth bits)
         val regFileReadData2 = Bits(globalConfig.operandWidth bits)
         val rs2, rd          = UInt(5 bits)
+        val loadType         = Bits(3 bits)
     }
 
     case class mem2wbB() extends Bundle with stageOp {
@@ -68,6 +73,7 @@ object Stages {
         val readData  = Bits(globalConfig.operandWidth bits)
         val ALUResult = Bits(globalConfig.operandWidth bits)
         val rd        = UInt(5 bits)
+        val loadType  = Bits(3 bits)
     }
 }
 

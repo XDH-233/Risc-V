@@ -22,9 +22,11 @@ case class control() extends Component {
         val ALUop    = out Bits (4 bits)
         val loadType = out Bits (3 bits)
         val ALUsrc   = out Bool()
+        val lui      = out Bool()
+        val auiPC    = out Bool()
     }
     noIoPrefix()
-    val JUMP = new Area {
+    val JUMP = {
         when(io.inst === Riscv.JAL) {
             io.J := True
         } otherwise {
@@ -36,17 +38,17 @@ case class control() extends Component {
         } otherwise {
             io.JR := False
         }
-    }.setName("")
+    }
 
-    val BRANCH = new Area {
+    val BRANCH = {
         when(Riscv.isBType(io.inst(Riscv.opcode))) {
             io.Branch := True
         } otherwise {
             io.Branch := False
         }
-    }.setName("")
+    }
 
-    val REG_WRITE = new Area {
+    val REG_WRITE = {
         when(Riscv.isRType(io.inst(Riscv.opcode)) ||
           Riscv.isIType(io.inst(Riscv.opcode)) ||
           Riscv.isUType(io.inst(Riscv.opcode)) ||
@@ -55,45 +57,44 @@ case class control() extends Component {
         } otherwise {
             io.regWrite := False
         }
-    }.setName("")
+    }
 
-    val MEM_TO_REG = new Area {
+    val MEM_TO_REG = {
         when(Riscv.isLoadInstOpcode(io.inst(Riscv.opcode))) {
             io.memtoReg := True
         } otherwise {
             io.memtoReg := False
         }
-    }.setName("")
+    }
 
-    val MEM_WRITE = new Area {
+    val MEM_WRITE =  {
         when(Riscv.isSType(io.inst(Riscv.opcode))) {
             io.memWrite := True
         } otherwise {
             io.memWrite := False
         }
-    }.setName("")
+    }
 
-    val MEM_READ = new Area {
+    val MEM_READ =  {
         when(Riscv.isLoadInstOpcode(io.inst(Riscv.opcode))) {
             io.memRead := True
         } otherwise {
             io.memRead := False
         }
-    }.setName("")
+    }
 
-    val ALU_OP = new Area {
+    val ALU_OP = {
         io.ALUop := B(Riscv.ALU_NOP)
         when(io.inst === Riscv.ADD ||
           io.inst === Riscv.ADDI ||
           io.inst === Riscv.ADDW ||
           io.inst === Riscv.ADDIW ||
-          io.inst === Riscv.JALR
-        ) {
+          io.inst === Riscv.JALR ||
+          Riscv.isSType(io.inst(Riscv.opcode))) {
             io.ALUop := B(Riscv.ALU_ADD)
         }
 
         when(Riscv.isLoadInstOpcode(io.inst(Riscv.opcode)) ||
-          Riscv.isSType(io.inst(Riscv.opcode)) ||
           io.inst === Riscv.AUIPC
         ) {
             io.ALUop := B(Riscv.ALU_RAM)
@@ -150,17 +151,17 @@ case class control() extends Component {
         when(io.inst === Riscv.AND || io.inst === Riscv.ANDI) {
             io.ALUop := B(Riscv.ALU_AND)
         }
-    }.setName("")
+    }
 
-    val LOAD_TYPE = new Area {
+    val LOAD_TYPE =  {
         io.loadType := Riscv.loadDefault
-        when(io.inst === Riscv.LB) {
+        when(io.inst === Riscv.LB || io.inst === Riscv.SB) {
             io.loadType := B(Riscv.loadByte)
         }
         when(io.inst === Riscv.LBU) {
             io.loadType := B(Riscv.loadByteU)
         }
-        when(io.inst === Riscv.LH) {
+        when(io.inst === Riscv.LH || io.inst === Riscv.SH) {
             io.loadType := B(Riscv.loadHalfWord)
         }
 
@@ -168,16 +169,20 @@ case class control() extends Component {
             io.loadType := B(Riscv.loadHalfWordU)
         }
 
-        when(io.inst === Riscv.LW) {
+        when(io.inst(Riscv.opcode) === B"0111011" ||
+          io.inst(Riscv.opcode) === B"0011011" ||
+          io.inst === Riscv.LW ||
+          io.inst === Riscv.SW
+        ) {
             io.loadType := B(Riscv.loadWord)
         }
 
         when(io.inst === Riscv.LWU) {
             io.loadType := B(Riscv.loadWordU)
         }
-    }.setName("")
+    }
 
-    val ALUsrc = new Area {
+    val ALUsrc =  {
         when(Riscv.isIType(io.inst(Riscv.opcode)) ||
           Riscv.isSType(io.inst(Riscv.opcode))
         ) {
@@ -185,7 +190,7 @@ case class control() extends Component {
         } otherwise {
             io.ALUsrc := False
         }
-    }.setName("")
+    }
 }
 
 case class branchPredict() extends Component {
@@ -247,10 +252,10 @@ case class hazardDet() extends Component {
 
         val ex2memRegWrite = in Bool()
         val ex2memRd       = in UInt (5 bits)
+        val ex2memMemtoReg = in Bool()
 
         val branch = in Bool()
         val JR = in Bool()
-
         val stall = out Bool()
     }
     noIoPrefix()
@@ -271,6 +276,7 @@ case class hazardDet() extends Component {
     }
     // stall for branch in MEM
     when(io.ex2memRegWrite &&
+      io.ex2memMemtoReg && // if rd need
       io.ex2memRd =/= 0 &&
       (((io.if2idRs1 === io.ex2memRd) || (io.if2idRs2 === io.ex2memRd)) && (io.branch || io.JR))
     ) {
